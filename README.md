@@ -1,5 +1,26 @@
-# LocalLens
+# locallens
 
-A TypeScript community-information service that validates simulated public notices, preserves attribution, extracts actions and deadlines, removes duplicates, ranks personalized briefings, renders escaped accessible HTML, and provides bounded exponential retry utilities for failed ingestion.
+community notices, but condensed into a briefing
 
-Run `npm install`, `npm test`, and `npm run build`; start with `npm start`. Post the single-notice fixture with `curl -X POST localhost:8080/notices -H 'Content-Type: application/json' --data @data/notice.sample.json`. Storage uses atomic JSON replacement and quarantines corrupt files. The included feed is synthetic. Duplicate detection is deliberately conservative and there is no live municipal connector.
+TypeScript. checks the notice, keeps the source, pulls out deadlines/actions, filters duplicates. preferences change the order.
+
+escaped HTML + accessibility support.
+
+```sh
+npm install
+npm test
+npm run build
+npm start
+```
+
+try the sample notice:
+
+```sh
+curl -X POST localhost:8080/notices \
+  -H 'Content-Type: application/json' \
+  --data @data/notice.sample.json
+```
+
+storage is JSON with atomic replacement and corrupt-file quarantine. there are bounded backoff/retry helpers too.
+
+the sample feed is synthetic. duplicate matching is conservative, and this isn't connected to a live municipal feed.
