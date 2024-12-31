@@ -24,3 +24,7 @@ curl -X POST localhost:8080/notices \
 storage is JSON with atomic replacement and corrupt-file quarantine. there are bounded backoff/retry helpers too.
 
 the sample feed is synthetic. duplicate matching is conservative, and this isn't connected to a live municipal feed.
+
+## Implementation details
+
+The notice store supports serialized upserts, stale-update rejection, unique temporary files for atomic writes, corruption quarantine, and strict HTTP/HTTPS source validation.
