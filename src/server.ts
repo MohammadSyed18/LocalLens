@@ -2,10 +2,30 @@ import {createServer, type ServerResponse} from 'node:http';
 import {briefing, Store, validate} from './notices.js';
 import {createDigest, digestToRss, type DigestOptions} from './digest.js';
 
+import {ReaderStore, ReaderConflict, inbox} from './reader.js';
+import {renderInbox} from './inboxHtml.js';
+const reader = new ReaderStore(process.env.LOCALLENS_READER ?? 'data/reader.json');
 const store = new Store(process.env.LOCALLENS_DB ?? 'data/notices.json');
 const server = createServer(async (req,res) => {
   try {
     const url = new URL(req.url ?? '/', 'http://local');
+    if (req.method === 'GET' && ['/', '/inbox'].includes(url.pathname)) {
+      const state = await reader.load();
+      const result = inbox(await store.load(), state, {mode:url.searchParams.get('mode') ?? 'all'});
+      if (url.pathname === '/') {
+        res.writeHead(200, {'content-type':'text/html; charset=utf-8','x-content-type-options':'nosniff','cache-control':'no-store'});
+        return res.end(renderInbox(result,state));
+      }
+      return send(res,200,{...result,revision:state.revision});
+    }
+    if (req.method === 'GET' && url.pathname === '/reader') return send(res,200,await reader.load());
+    if (req.method === 'POST' && url.pathname === '/reader') {
+      if (req.headers['content-type']?.split(';')[0] !== 'application/json') throw new Error('Use application/json');
+      const chunks:Buffer[]=[];let size=0;
+      for await (const chunk of req) {size+=chunk.length;if(size>100000)throw new Error('request too large');chunks.push(chunk);}
+      const payload=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      return send(res,200,await reader.update(payload.revision,payload.action));
+    }
     if (req.method === 'GET' && url.pathname === '/briefing') {
       return send(res,200,briefing(await store.load(),url.searchParams.getAll('interest')));
     }
@@ -33,7 +53,7 @@ const server = createServer(async (req,res) => {
       return send(res,201,notice);
     }
     send(res,404,{error:'not found'});
-  } catch (error) { send(res,400,{error:(error as Error).message}); }
+  } catch (error) { send(res,error instanceof ReaderConflict ? 409 : 400,{error:(error as Error).message}); }
 });
 function send(res: ServerResponse, status: number, value: unknown) {
   res.writeHead(status,{'content-type':'application/json; charset=utf-8','x-content-type-options':'nosniff'});
