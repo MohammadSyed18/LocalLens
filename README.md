@@ -1,8 +1,10 @@
-# LocalLens
+# locallens
 
-A TypeScript prototype for turning public notices into a short, personalized briefing.
+community notices, but condensed into a briefing
 
-It checks incoming notices, keeps their sources, extracts actions and deadlines, and filters duplicates. Preferences affect the order of the briefing. The HTML output escapes notice text and includes accessibility support.
+TypeScript. checks the notice, keeps the source, pulls out deadlines/actions, filters duplicates. preferences change the order.
+
+escaped HTML + accessibility support.
 
 ```sh
 npm install
@@ -11,7 +13,7 @@ npm run build
 npm start
 ```
 
-Try the sample notice:
+try the sample notice:
 
 ```sh
 curl -X POST localhost:8080/notices \
@@ -19,6 +21,6 @@ curl -X POST localhost:8080/notices \
   --data @data/notice.sample.json
 ```
 
-Storage is JSON with atomic replacement and corrupt-file quarantine. There are bounded backoff/retry helpers too.
+storage is JSON with atomic replacement and corrupt-file quarantine. there are bounded backoff/retry helpers too.
 
-The sample feed is synthetic. Duplicate matching is conservative, and this isn't connected to a live municipal feed.
+the sample feed is synthetic. duplicate matching is conservative, and this isn't connected to a live municipal feed.
